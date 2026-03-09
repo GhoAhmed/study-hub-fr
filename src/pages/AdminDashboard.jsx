@@ -1,11 +1,26 @@
+import {
+  MdAnalytics,
+  MdDashboard,
+  MdMenuBook,
+  MdPeople,
+  MdSettings,
+} from "react-icons/md";
 import DashboardLayout from "../components/DashboardLayout";
 
 const navItems = [
-  { icon: "🏠", label: "Overview", path: "/admin" },
-  { icon: "👥", label: "Users", path: "/admin/users" },
-  { icon: "📚", label: "Courses", path: "/admin/courses" },
-  { icon: "📊", label: "Analytics", path: "/admin/analytics" },
-  { icon: "⚙️", label: "Settings", path: "/admin/settings" },
+  { icon: <MdDashboard size={20} />, label: "Overview", path: "/admin" },
+  { icon: <MdPeople size={20} />, label: "Users", path: "/admin/users" },
+  { icon: <MdMenuBook size={20} />, label: "Courses", path: "/admin/courses" },
+  {
+    icon: <MdAnalytics size={20} />,
+    label: "Analytics",
+    path: "/admin/analytics",
+  },
+  {
+    icon: <MdSettings size={20} />,
+    label: "Settings",
+    path: "/admin/settings",
+  },
 ];
 
 export default function AdminDashboard() {

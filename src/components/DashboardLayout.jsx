@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { LuLogOut } from "react-icons/lu";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const roleAccent = {
@@ -128,7 +129,9 @@ export default function DashboardLayout({ children, navItems, role }) {
             onClick={logout}
             className="nav-link text-muted hover:text-danger"
           >
-            <span className="text-lg shrink-0">🚪</span>
+            <span className="text-lg shrink-0">
+              <LuLogOut />
+            </span>
             {sidebarOpen && <span>Logout</span>}
           </button>
         </div>

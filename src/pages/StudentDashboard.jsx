@@ -1,11 +1,35 @@
+import {
+  MdAddBox,
+  MdAnalytics,
+  MdDashboard,
+  MdMenuBook,
+  MdPeople,
+  MdSettings,
+} from "react-icons/md";
 import DashboardLayout from "../components/DashboardLayout";
 
 const navItems = [
-  { icon: "🏠", label: "Overview", path: "/student" },
-  { icon: "📖", label: "My Courses", path: "/student/courses" },
-  { icon: "🔍", label: "Browse", path: "/student/browse" },
-  { icon: "📊", label: "Progress", path: "/student/progress" },
-  { icon: "⚙️", label: "Settings", path: "/student/settings" },
+  { icon: <MdDashboard size={20} />, label: "Overview", path: "/instructor" },
+  {
+    icon: <MdMenuBook size={20} />,
+    label: "My Courses",
+    path: "/student/courses",
+  },
+  {
+    icon: <MdAnalytics size={20} />,
+    label: "Progress",
+    path: "/student/progress",
+  },
+  {
+    icon: <MdAddBox size={20} />,
+    label: "Enrollments",
+    path: "/student/enrollments",
+  },
+  {
+    icon: <MdSettings size={20} />,
+    label: "Settings",
+    path: "/student/settings",
+  },
 ];
 
 export default function StudentDashboard() {
