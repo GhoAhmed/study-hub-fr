@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const roleAccent = {
@@ -10,9 +10,29 @@ const roleAccent = {
 export default function DashboardLayout({ children, navItems, role }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const { color, rgb } = roleAccent[role] || roleAccent.student;
+
+  const isMobileScreen = () => window.innerWidth < 768;
+  const [collapsed, setCollapsed] = useState(isMobileScreen());
+  const [isMobile, setIsMobile] = useState(isMobileScreen());
+
+  // Sync on resize
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = isMobileScreen();
+      setIsMobile(mobile);
+      if (mobile) setCollapsed(true);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (isMobile) setCollapsed(true);
+  }, [location.pathname]);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -20,12 +40,32 @@ export default function DashboardLayout({ children, navItems, role }) {
     navigate("/login");
   };
 
+  const sidebarOpen = !collapsed;
+
   return (
-    <div className="flex min-h-screen bg-bg">
+    <div className="flex min-h-screen bg-bg relative">
+      {/* Backdrop (mobile only) */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm"
+          onClick={() => setCollapsed(true)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className="flex flex-col border-r border-border bg-surface transition-all duration-300 shrink-0"
-        style={{ width: collapsed ? "72px" : "240px" }}
+        className="flex flex-col border-r border-border bg-surface transition-all duration-300 shrink-0 z-30"
+        style={{
+          width: sidebarOpen ? "240px" : "72px",
+          // On mobile: float over content
+          position: isMobile ? "fixed" : "relative",
+          top: isMobile ? 0 : "auto",
+          left: isMobile ? (sidebarOpen ? 0 : "-72px") : "auto",
+          height: isMobile ? "100vh" : "auto",
+          // Hide collapsed sidebar off-screen on mobile
+          transform:
+            isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
+        }}
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
@@ -35,9 +75,9 @@ export default function DashboardLayout({ children, navItems, role }) {
           >
             <span className="text-white font-display font-bold text-sm">L</span>
           </div>
-          {!collapsed && (
+          {sidebarOpen && (
             <span className="text-lg font-display font-bold text-accent">
-              LearnFlow
+              StudyHub
             </span>
           )}
         </div>
@@ -62,7 +102,7 @@ export default function DashboardLayout({ children, navItems, role }) {
                 }
               >
                 <span className="text-lg shrink-0">{icon}</span>
-                {!collapsed && <span>{label}</span>}
+                {sidebarOpen && <span>{label}</span>}
               </button>
             );
           })}
@@ -70,7 +110,7 @@ export default function DashboardLayout({ children, navItems, role }) {
 
         {/* User + Logout */}
         <div className="px-3 py-4 border-t border-border flex flex-col gap-1">
-          {!collapsed && (
+          {sidebarOpen && (
             <div className="flex items-center gap-3 px-3 py-2 mb-1">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 text-white"
@@ -89,12 +129,12 @@ export default function DashboardLayout({ children, navItems, role }) {
             className="nav-link text-muted hover:text-danger"
           >
             <span className="text-lg shrink-0">🚪</span>
-            {!collapsed && <span>Logout</span>}
+            {sidebarOpen && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main */}
+      {/* Main — never shifts on mobile */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
         <header className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
@@ -102,7 +142,7 @@ export default function DashboardLayout({ children, navItems, role }) {
             onClick={() => setCollapsed(!collapsed)}
             className="p-2 rounded-lg bg-surface2 text-muted hover:text-text transition-colors text-sm font-medium"
           >
-            {collapsed ? "→" : "←"}
+            {sidebarOpen ? "←" : "☰"}
           </button>
           <span
             className="badge"

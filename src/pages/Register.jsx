@@ -35,7 +35,7 @@ export default function Register() {
       <div className="w-full max-w-md fade-up">
         <Link to="/" className="inline-block mb-8">
           <span className="text-2xl font-display font-bold text-accent">
-            LearnFlow
+            StudyHub
           </span>
         </Link>
 

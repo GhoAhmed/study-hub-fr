@@ -6,7 +6,7 @@ export default function Home() {
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-4 border-b border-border">
         <span className="text-2xl font-display font-bold text-accent">
-          LearnFlow
+          StudyHub
         </span>
         <div className="flex items-center gap-3">
           <Link to="/login">
