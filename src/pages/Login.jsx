@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { MdErrorOutline, MdHourglassTop } from "react-icons/md";
 
 export default function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [errorType, setErrorType] = useState(""); // "pending" | "disabled" | "error"
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
@@ -15,6 +17,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setErrorType("");
     try {
       const res = await axios.post("http://localhost:3000/api/login", form);
       const token = res.data;
@@ -25,11 +28,42 @@ export default function Login() {
       else if (payload.role === "admin") navigate("/admin");
       else navigate("/student");
     } catch (err) {
-      setError(err.response?.data?.error || "Login failed");
+      const message = err.response?.data?.error || "Login failed";
+      setError(message);
+      if (message.toLowerCase().includes("pending")) setErrorType("pending");
+      else if (message.toLowerCase().includes("disabled"))
+        setErrorType("disabled");
+      else setErrorType("error");
     } finally {
       setLoading(false);
     }
   };
+
+  const errorStyles = {
+    pending: {
+      bg: "rgba(108,71,255,0.1)",
+      border: "rgba(108,71,255,0.3)",
+      color: "var(--color-primary)",
+      icon: <MdHourglassTop size={20} className="shrink-0 mt-0.5" />,
+      title: "Pending Approval",
+    },
+    disabled: {
+      bg: "rgba(255,107,107,0.1)",
+      border: "rgba(255,107,107,0.3)",
+      color: "var(--color-danger)",
+      icon: <MdErrorOutline size={20} className="shrink-0 mt-0.5" />,
+      title: "Account Disabled",
+    },
+    error: {
+      bg: "rgba(255,107,107,0.1)",
+      border: "rgba(255,107,107,0.3)",
+      color: "var(--color-danger)",
+      icon: <MdErrorOutline size={20} className="shrink-0 mt-0.5" />,
+      title: "Login Failed",
+    },
+  };
+
+  const style = errorStyles[errorType] || errorStyles.error;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-bg">
@@ -48,14 +82,18 @@ export default function Login() {
 
           {error && (
             <div
-              className="p-3 rounded-xl text-sm mb-6"
+              className="flex gap-3 p-4 rounded-xl text-sm mb-6"
               style={{
-                background: "rgba(255,107,107,0.1)",
-                border: "1px solid rgba(255,107,107,0.3)",
-                color: "var(--color-danger)",
+                background: style.bg,
+                border: `1px solid ${style.border}`,
+                color: style.color,
               }}
             >
-              {error}
+              {style.icon}
+              <div>
+                <p className="font-semibold mb-0.5">{style.title}</p>
+                <p style={{ opacity: 0.85 }}>{error}</p>
+              </div>
             </div>
           )}
 
