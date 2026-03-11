@@ -2,7 +2,11 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import InstructorDashboard from "./pages/InstructorDashboard";
+import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
+import InstructorDashboard from "./pages/instructor/InstructorDashboard";
+import InstructorCourses from "./pages/instructor/InstructorCourses";
+import InstructorCourseForm from "./pages/instructor/InstructorCourseForm";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -30,6 +34,30 @@ export default function App() {
         }
       />
       <Route
+        path="/instructor/courses"
+        element={
+          <PrivateRoute role="instructor">
+            <InstructorCourses />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/instructor/courses/create"
+        element={
+          <PrivateRoute role="instructor">
+            <InstructorCourseForm />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/instructor/courses/edit/:id"
+        element={
+          <PrivateRoute role="instructor">
+            <InstructorCourseForm />
+          </PrivateRoute>
+        }
+      />
+      <Route
         path="/student"
         element={
           <PrivateRoute role="student">
@@ -37,6 +65,9 @@ export default function App() {
           </PrivateRoute>
         }
       />
+      <Route path="/courses" element={<Courses />} />
+      <Route path="/courses/:id" element={<CourseDetail />} />
+
       <Route
         path="/admin"
         element={
