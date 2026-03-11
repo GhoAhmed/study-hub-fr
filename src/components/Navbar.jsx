@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { MdMenu, MdClose } from "react-icons/md";
+import toast from "react-hot-toast";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Navbar() {
 
   const logout = () => {
     localStorage.clear();
+    toast.success("Logged out successfully");
     navigate("/");
   };
 

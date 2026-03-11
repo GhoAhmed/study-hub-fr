@@ -4,6 +4,7 @@ import DashboardLayout from "../../components/DashboardLayout";
 import { instructorNavItems } from "./InstructorDashboard";
 import axios from "axios";
 import { MdAdd, MdClose, MdArrowBack, MdSave } from "react-icons/md";
+import toast from "react-hot-toast";
 
 const api = (token) =>
   axios.create({
@@ -96,7 +97,7 @@ export default function InstructorCourseForm() {
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
-  const [error, setError] = useState("");
+  const [error] = useState("");
 
   useEffect(() => {
     if (!isEdit) return;
@@ -129,19 +130,25 @@ export default function InstructorCourseForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    const toastId = toast.loading(
+      isEdit ? "Saving changes..." : "Creating course...",
+    );
     try {
       const payload = { ...form, price: Number(form.price) };
       if (isEdit) await api(token).put(`/courses/${id}`, payload);
       else await api(token).post("/courses", payload);
+      toast.success(isEdit ? "Course updated!" : "Course created!", {
+        id: toastId,
+      });
       navigate("/instructor/courses");
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to save course");
+      toast.error(err.response?.data?.error || "Failed to save course", {
+        id: toastId,
+      });
     } finally {
       setLoading(false);
     }
   };
-
   if (fetching)
     return (
       <DashboardLayout navItems={instructorNavItems} role="instructor">

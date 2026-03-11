@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -10,7 +11,6 @@ export default function Register() {
     password: "",
     role: "student",
   });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
@@ -19,12 +19,16 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     try {
       await axios.post("http://localhost:3000/api/register", form);
+      toast.success(
+        form.role === "instructor"
+          ? "Account created! Waiting for admin approval."
+          : "Account created! You can now sign in.",
+      );
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed");
+      toast.error(err.response?.data?.error || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -46,19 +50,6 @@ export default function Register() {
           <p className="text-sm text-muted mb-8">
             Start your learning journey today
           </p>
-
-          {error && (
-            <div
-              className="p-3 rounded-xl text-sm mb-6"
-              style={{
-                background: "rgba(255,107,107,0.1)",
-                border: "1px solid rgba(255,107,107,0.3)",
-                color: "var(--color-danger)",
-              }}
-            >
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {[

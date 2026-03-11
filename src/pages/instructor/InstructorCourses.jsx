@@ -13,6 +13,7 @@ import {
   MdStar,
   MdPeople,
 } from "react-icons/md";
+import toast from "react-hot-toast";
 
 const api = (token) =>
   axios.create({
@@ -54,17 +55,57 @@ export default function InstructorCourses() {
     fetchCourses();
   }, [page, search]);
 
-  const handleDelete = async (id) => {
-    if (!confirm("Delete this course? This cannot be undone.")) return;
-    await api(token).delete(`/courses/${id}`);
-    fetchCourses();
+  const handleDelete = (id) => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <p className="font-medium text-sm">Delete this course?</p>
+          <p className="text-xs text-muted">
+            All sections and lessons will be lost.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 py-1.5 rounded-lg text-xs font-medium bg-surface border border-border text-muted"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                const toastId = toast.loading("Deleting...");
+                await api(token).delete(`/courses/${id}`);
+                toast.success("Course deleted", { id: toastId });
+                fetchCourses();
+              }}
+              className="flex-1 py-1.5 rounded-lg text-xs font-medium text-white"
+              style={{ background: "var(--color-danger)" }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 8000 },
+    );
   };
 
   const handleTogglePublish = async (course) => {
-    await api(token).put(`/courses/${course._id}`, {
-      isPublished: !course.isPublished,
-    });
-    fetchCourses();
+    const toastId = toast.loading(
+      course.isPublished ? "Unpublishing..." : "Publishing...",
+    );
+    try {
+      await api(token).put(`/courses/${course._id}`, {
+        isPublished: !course.isPublished,
+      });
+      toast.success(
+        course.isPublished ? "Course unpublished" : "Course published!",
+        { id: toastId },
+      );
+      fetchCourses();
+    } catch {
+      toast.error("Failed to update course", { id: toastId });
+    }
   };
 
   const totalPages = Math.ceil(total / 9);

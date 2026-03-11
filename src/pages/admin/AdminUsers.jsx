@@ -10,6 +10,7 @@ import {
   MdCheckCircle,
   MdSearch,
 } from "react-icons/md";
+import toast from "react-hot-toast";
 
 const api = (token) =>
   axios.create({
@@ -73,32 +74,60 @@ export default function AdminUsers() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     try {
       if (modal === "create") {
         await api(token).post("/admin/users", form);
+        toast.success("User created successfully");
       } else {
         const payload = { ...form };
         if (!payload.password) delete payload.password;
         await api(token).put(`/admin/users/${selected._id}`, payload);
+        toast.success("User updated successfully");
       }
       closeModal();
       fetchUsers();
     } catch (err) {
-      setError(err.response?.data?.error || "Error");
+      toast.error(err.response?.data?.error || "Error saving user");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this user?")) return;
-    await api(token).delete(`/admin/users/${id}`);
-    fetchUsers();
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <p className="font-medium text-sm">Delete this user?</p>
+          <p className="text-xs text-muted">This action cannot be undone.</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 py-1.5 rounded-lg text-xs font-medium bg-surface border border-border text-muted"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                await api(token).delete(`/admin/users/${id}`);
+                toast.success("User deleted");
+                fetchUsers();
+              }}
+              className="flex-1 py-1.5 rounded-lg text-xs font-medium text-white"
+              style={{ background: "var(--color-danger)" }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 8000 },
+    );
   };
 
-  const handleToggle = async (id) => {
-    await api(token).patch(`/admin/users/${id}/toggle-status`);
+  const handleToggle = async (u) => {
+    await api(token).patch(`/admin/users/${u._id}/toggle-status`);
+    toast.success(`User ${u.isActive ? "disabled" : "activated"}`);
     fetchUsers();
   };
 
@@ -230,7 +259,7 @@ export default function AdminUsers() {
                         <MdEdit size={16} />
                       </button>
                       <button
-                        onClick={() => handleToggle(u._id)}
+                        onClick={() => handleToggle(u)} // 👈 pass u not u._id
                         title={u.isActive ? "Disable" : "Enable"}
                         className="p-1.5 rounded-lg hover:bg-surface transition-colors"
                         style={{

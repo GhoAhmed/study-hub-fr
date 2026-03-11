@@ -3,6 +3,7 @@ import DashboardLayout from "../../components/DashboardLayout";
 import { navItems } from "./AdminDashboard";
 import axios from "axios";
 import { MdCheckCircle, MdCancel, MdPerson } from "react-icons/md";
+import toast from "react-hot-toast";
 
 const api = (token) =>
   axios.create({
@@ -13,7 +14,7 @@ const api = (token) =>
 export default function AdminInstructors() {
   const token = localStorage.getItem("token");
   const [pending, setPending] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
 
   const fetchPending = async () => {
     const res = await api(token).get("/admin/instructors/pending");
@@ -26,18 +27,50 @@ export default function AdminInstructors() {
   }, []);
 
   const approve = async (id) => {
-    setLoading(true);
-    await api(token).patch(`/admin/instructors/${id}/approve`);
-    fetchPending();
-    setLoading(false);
+    const toastId = toast.loading("Approving instructor...");
+    try {
+      await api(token).patch(`/admin/instructors/${id}/approve`);
+      toast.success("Instructor approved!", { id: toastId });
+      fetchPending();
+    } catch {
+      toast.error("Failed to approve", { id: toastId });
+    }
   };
 
-  const reject = async (id) => {
-    if (!confirm("Reject and delete this instructor account?")) return;
-    await api(token).delete(`/admin/instructors/${id}/reject`);
-    fetchPending();
+  const reject = (id) => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <p className="font-medium text-sm">Reject this instructor?</p>
+          <p className="text-xs text-muted">
+            Their account will be permanently deleted.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 py-1.5 rounded-lg text-xs font-medium bg-surface border border-border text-muted"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                const toastId = toast.loading("Rejecting...");
+                await api(token).delete(`/admin/instructors/${id}/reject`);
+                toast.success("Instructor rejected", { id: toastId });
+                fetchPending();
+              }}
+              className="flex-1 py-1.5 rounded-lg text-xs font-medium text-white"
+              style={{ background: "var(--color-danger)" }}
+            >
+              Reject
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 8000 },
+    );
   };
-
   return (
     <DashboardLayout navItems={navItems} role="admin">
       <div className="fade-up">
