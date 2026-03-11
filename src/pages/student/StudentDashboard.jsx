@@ -6,7 +6,7 @@ import {
   MdPeople,
   MdSettings,
 } from "react-icons/md";
-import DashboardLayout from "../components/DashboardLayout";
+import DashboardLayout from "../../components/DashboardLayout";
 
 const navItems = [
   { icon: <MdDashboard size={20} />, label: "Overview", path: "/instructor" },

@@ -1,10 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { MdMenu, MdClose } from "react-icons/md";
 import toast from "react-hot-toast";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const [open, setOpen] = useState(false);
 
@@ -19,6 +20,25 @@ export default function Navbar() {
     localStorage.clear();
     toast.success("Logged out successfully");
     navigate("/");
+  };
+
+  // ✅ handles both same-page scroll and cross-page navigation + scroll
+  const scrollToSection = (sectionId) => {
+    setOpen(false);
+    if (location.pathname === "/") {
+      // already on home — just scroll
+      document
+        .getElementById(sectionId)
+        ?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // navigate to home first, then scroll after render
+      navigate("/");
+      setTimeout(() => {
+        document
+          .getElementById(sectionId)
+          ?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
   };
 
   return (
@@ -36,18 +56,18 @@ export default function Navbar() {
           >
             Courses
           </Link>
-          <Link
-            to="/#features"
+          <button
+            onClick={() => scrollToSection("features")}
             className="text-sm text-muted hover:text-text transition-colors"
           >
             Features
-          </Link>
-          <Link
-            to="/#instructors"
+          </button>
+          <button
+            onClick={() => scrollToSection("instructors")}
             className="text-sm text-muted hover:text-text transition-colors"
           >
             Instructors
-          </Link>
+          </button>
         </div>
 
         <div className="hidden md:flex items-center gap-3">
@@ -80,7 +100,6 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile toggle */}
         <button
           className="md:hidden p-2 text-muted"
           onClick={() => setOpen(!open)}
@@ -99,6 +118,18 @@ export default function Navbar() {
           >
             Courses
           </Link>
+          <button
+            onClick={() => scrollToSection("features")}
+            className="text-sm text-muted text-left"
+          >
+            Features
+          </button>
+          <button
+            onClick={() => scrollToSection("instructors")}
+            className="text-sm text-muted text-left"
+          >
+            Instructors
+          </button>
           {user ? (
             <>
               <button

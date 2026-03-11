@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { LuLogOut } from "react-icons/lu";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 const roleAccent = {
   instructor: { color: "var(--color-primary)", rgb: "108,71,255" },
@@ -78,7 +78,7 @@ export default function DashboardLayout({ children, navItems, role }) {
           </div>
           {sidebarOpen && (
             <span className="text-lg font-display font-bold text-accent">
-              StudyHub
+              <Link to="/">StudyHub</Link>
             </span>
           )}
         </div>
