@@ -60,6 +60,14 @@ export default function App() {
         }
       />
       <Route
+        path="/instructor/courses/:id/content"
+        element={
+          <PrivateRoute role="instructor">
+            <InstructorCourseDetail />
+          </PrivateRoute>
+        }
+      />
+      <Route
         path="/student"
         element={
           <PrivateRoute role="student">
@@ -69,15 +77,6 @@ export default function App() {
       />
       <Route path="/courses" element={<Courses />} />
       <Route path="/courses/:id" element={<CourseDetail />} />
-
-      <Route
-        path="/instructor/courses/:id/content"
-        element={
-          <PrivateRoute role="instructor">
-            <InstructorCourseDetail />
-          </PrivateRoute>
-        }
-      />
       <Route
         path="/student"
         element={

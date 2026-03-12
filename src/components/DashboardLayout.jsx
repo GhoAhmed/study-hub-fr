@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { LuLogOut } from "react-icons/lu";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const roleAccent = {
   instructor: { color: "var(--color-primary)", rgb: "108,71,255" },
@@ -18,7 +19,6 @@ export default function DashboardLayout({ children, navItems, role }) {
   const [collapsed, setCollapsed] = useState(isMobileScreen());
   const [isMobile, setIsMobile] = useState(isMobileScreen());
 
-  // Sync on resize
   useEffect(() => {
     const handleResize = () => {
       const mobile = isMobileScreen();
@@ -29,23 +29,23 @@ export default function DashboardLayout({ children, navItems, role }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Close sidebar on route change (mobile)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isMobile) setCollapsed(true);
   }, [location.pathname]);
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.clear();
+    toast.success("Logged out successfully");
     navigate("/login");
   };
 
   const sidebarOpen = !collapsed;
 
   return (
-    <div className="flex min-h-screen bg-bg relative">
-      {/* Backdrop (mobile only) */}
+    // ✅ h-screen + overflow-hidden on root to prevent page scroll bleeding
+    <div className="flex h-screen overflow-hidden bg-bg relative">
+      {/* Backdrop — mobile only */}
       {isMobile && sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm"
@@ -53,38 +53,38 @@ export default function DashboardLayout({ children, navItems, role }) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* ── SIDEBAR ── */}
       <aside
-        className="flex flex-col border-r border-border bg-surface transition-all duration-300 shrink-0 z-30"
+        className="flex flex-col border-r border-border bg-surface shrink-0 z-30 transition-all duration-300"
         style={{
           width: sidebarOpen ? "240px" : "72px",
-          // On mobile: float over content
+          // ✅ desktop: relative in normal flow, full height via flex parent
+          // ✅ mobile: fixed overlay, full viewport height
           position: isMobile ? "fixed" : "relative",
           top: isMobile ? 0 : "auto",
           left: isMobile ? (sidebarOpen ? 0 : "-72px") : "auto",
-          height: isMobile ? "100vh" : "auto",
-          // Hide collapsed sidebar off-screen on mobile
+          height: isMobile ? "100vh" : "100%",
           transform:
             isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
         }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
+        <div className="flex items-center gap-3 px-4 py-5 border-b border-border shrink-0">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
             style={{ background: color }}
           >
-            <span className="text-white font-display font-bold text-sm">L</span>
+            <span className="text-white font-display font-bold text-sm">S</span>
           </div>
           {sidebarOpen && (
-            <span className="text-lg font-display font-bold text-accent">
-              <Link to="/">StudyHub</Link>
-            </span>
+            <Link to="/" className="text-lg font-display font-bold text-accent">
+              StudyHub
+            </Link>
           )}
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 flex flex-col gap-1 px-3 py-4">
+        {/* Nav — scrollable if items overflow */}
+        <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
           {navItems.map(({ icon, label, path }) => {
             const active = location.pathname === path;
             return (
@@ -97,20 +97,20 @@ export default function DashboardLayout({ children, navItems, role }) {
                     ? {
                         background: `rgba(${rgb}, 0.1)`,
                         borderColor: `rgba(${rgb}, 0.25)`,
-                        color: color,
+                        color,
                       }
                     : {}
                 }
               >
-                <span className="text-lg shrink-0">{icon}</span>
+                <span className="shrink-0">{icon}</span>
                 {sidebarOpen && <span>{label}</span>}
               </button>
             );
           })}
         </nav>
 
-        {/* User + Logout */}
-        <div className="px-3 py-4 border-t border-border flex flex-col gap-1">
+        {/* User + Logout — always pinned to bottom */}
+        <div className="px-3 py-4 border-t border-border flex flex-col gap-1 shrink-0">
           {sidebarOpen && (
             <div className="flex items-center gap-3 px-3 py-2 mb-1">
               <div
@@ -129,21 +129,21 @@ export default function DashboardLayout({ children, navItems, role }) {
             onClick={logout}
             className="nav-link text-muted hover:text-danger"
           >
-            <span className="text-lg shrink-0">
-              <LuLogOut />
+            <span className="shrink-0">
+              <LuLogOut size={18} />
             </span>
             {sidebarOpen && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main — never shifts on mobile */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* ── MAIN ── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-2 rounded-lg bg-surface2 text-muted hover:text-text transition-colors text-sm font-medium"
+            className="p-2 rounded-lg bg-surface2 text-muted hover:text-text transition-colors text-sm"
           >
             {sidebarOpen ? "←" : "☰"}
           </button>
@@ -159,8 +159,8 @@ export default function DashboardLayout({ children, navItems, role }) {
           </span>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 p-8 overflow-auto">{children}</main>
+        {/* ✅ Only the content area scrolls */}
+        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

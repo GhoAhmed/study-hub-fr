@@ -13,6 +13,9 @@ import {
   MdCancel,
   MdStar,
   MdAccessTime,
+  MdCheckCircle,
+  MdTrendingUp,
+  MdArrowForward,
 } from "react-icons/md";
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -55,6 +58,8 @@ const statusStyle = {
 export default function StudentDashboard() {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,7 +85,11 @@ export default function StudentDashboard() {
           <div className="flex gap-2">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="flex-1 py-1.5 rounded-lg text-xs bg-surface border border-border text-muted"
+              className="flex-1 py-1.5 rounded-lg text-xs border"
+              style={{
+                borderColor: "var(--color-border)",
+                color: "var(--color-muted)",
+              }}
             >
               Cancel
             </button>
@@ -110,189 +119,344 @@ export default function StudentDashboard() {
 
   const accepted = enrollments.filter((e) => e.status === "accepted");
   const pending = enrollments.filter((e) => e.status === "pending");
+  const completed = accepted.filter((e) => e.progress === 100);
+  const inProgress = accepted.filter((e) => e.progress > 0 && e.progress < 100);
+  const recentCourses = accepted.slice(0, 4);
+
+  const overallProgress = accepted.length
+    ? Math.round(
+        accepted.reduce((a, e) => a + (e.progress || 0), 0) / accepted.length,
+      )
+    : 0;
 
   return (
     <DashboardLayout navItems={studentNavItems} role="student">
-      <div className="fade-up">
-        <h1 className="text-4xl font-display font-bold mb-1">My Learning</h1>
-        <p className="text-muted mb-8">
-          Track your progress and continue where you left off
-        </p>
+      <div className="fade-up flex flex-col gap-8 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-4xl font-display font-bold mb-1">
+              Welcome back, {user.email?.split("@")[0]} 👋
+            </h1>
+            <p className="text-muted">Keep learning — you're doing great!</p>
+          </div>
+          <Link to="/courses">
+            <button className="btn-primary flex items-center gap-2">
+              <MdSearch size={18} /> Browse Courses
+            </button>
+          </Link>
+        </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             {
               label: "Enrolled",
               value: accepted.length,
               color: "var(--color-accent)",
+              icon: <MdMenuBook size={18} />,
+              sub: "Active courses",
             },
-            { label: "Pending", value: pending.length, color: "#fbbf24" },
             {
               label: "Completed",
-              value: accepted.filter((e) => e.progress === 100).length,
+              value: completed.length,
               color: "var(--color-primary)",
+              icon: <MdCheckCircle size={18} />,
+              sub: "Finished courses",
             },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="card flex flex-col gap-1">
-              <span className="text-sm text-muted">{label}</span>
+            {
+              label: "In Progress",
+              value: inProgress.length,
+              color: "#fbbf24",
+              icon: <MdTrendingUp size={18} />,
+              sub: "Keep going!",
+            },
+            {
+              label: "Pending",
+              value: pending.length,
+              color: "var(--color-muted)",
+              icon: <MdHourglassTop size={18} />,
+              sub: "Awaiting approval",
+            },
+          ].map(({ label, value, color, icon, sub }) => (
+            <div key={label} className="card flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">{label}</span>
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "rgba(0,229,176,0.1)",
+                    color: "var(--color-accent)",
+                  }}
+                >
+                  {icon}
+                </div>
+              </div>
               <span
                 className="text-4xl font-display font-bold"
                 style={{ color }}
               >
                 {value}
               </span>
+              <span className="text-xs text-muted">{sub}</span>
             </div>
           ))}
         </div>
 
-        {loading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {Array(3)
-              .fill(0)
-              .map((_, i) => (
-                <div key={i} className="card animate-pulse">
-                  <div className="h-36 bg-surface2 rounded-xl mb-4" />
-                  <div className="h-4 bg-surface2 rounded w-3/4 mb-2" />
-                  <div className="h-3 bg-surface2 rounded w-1/2" />
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Overall Progress */}
+          <div className="card flex flex-col gap-4">
+            <h2 className="font-display font-bold text-lg">Overall Progress</h2>
+            <div className="flex flex-col items-center py-4">
+              {/* Circle progress */}
+              <div className="relative w-32 h-32 mb-4">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="var(--color-border)"
+                    strokeWidth="10"
+                  />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="var(--color-accent)"
+                    strokeWidth="10"
+                    strokeDasharray={`${2 * Math.PI * 50}`}
+                    strokeDashoffset={`${2 * Math.PI * 50 * (1 - overallProgress / 100)}`}
+                    strokeLinecap="round"
+                    style={{ transition: "stroke-dashoffset 1s ease" }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-display font-bold">
+                    {overallProgress}%
+                  </span>
+                  <span className="text-xs text-muted">complete</span>
+                </div>
+              </div>
+              <p className="text-sm text-muted text-center">
+                {completed.length} of {accepted.length} courses completed
+              </p>
+            </div>
+
+            {/* Mini progress list */}
+            <div className="flex flex-col gap-2 mt-auto">
+              {inProgress.slice(0, 3).map((enr) => (
+                <div key={enr._id}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="truncate text-muted max-w-[160px]">
+                      {enr.courseId?.title}
+                    </span>
+                    <span className="shrink-0 ml-2">{enr.progress}%</span>
+                  </div>
+                  <div
+                    className="h-1.5 rounded-full"
+                    style={{ background: "var(--color-border)" }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${enr.progress}%`,
+                        background: "var(--color-accent)",
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
+            </div>
           </div>
-        ) : enrollments.length === 0 ? (
-          <div
-            className="card flex flex-col items-center py-20 text-center"
-            style={{ border: "1px dashed var(--color-border)" }}
-          >
-            <div className="text-5xl mb-4">📚</div>
-            <p className="text-lg font-display font-semibold mb-2">
-              No courses yet
-            </p>
-            <p className="text-sm text-muted mb-6">
-              Browse our catalog and enroll in your first course
-            </p>
-            <Link to="/courses">
-              <button className="btn-primary">Browse Courses</button>
-            </Link>
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {enrollments.map((enr) => {
-              const course = enr.courseId;
-              if (!course) return null;
-              const st = statusStyle[enr.status] || statusStyle.pending;
-              return (
-                <div
-                  key={enr._id}
-                  className="card p-0 overflow-hidden flex flex-col group"
-                >
-                  {/* Thumbnail */}
-                  <div className="relative h-40 bg-surface2 overflow-hidden">
-                    {course.thumbnail ? (
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">
-                        📚
+
+          {/* Continue Learning */}
+          <div className="card flex flex-col gap-4 lg:col-span-2">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display font-bold text-lg">
+                Continue Learning
+              </h2>
+              <button
+                onClick={() => navigate("/student/courses")}
+                className="text-xs text-primary flex items-center gap-1 hover:underline"
+              >
+                All courses <MdArrowForward size={14} />
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {Array(4)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div
+                      key={i}
+                      className="animate-pulse flex gap-3 p-3 rounded-xl border border-border"
+                    >
+                      <div className="w-14 h-14 rounded-xl bg-surface2 shrink-0" />
+                      <div className="flex-1 flex flex-col gap-2 justify-center">
+                        <div className="h-3 bg-surface2 rounded w-3/4" />
+                        <div className="h-2 bg-surface2 rounded w-1/2" />
                       </div>
-                    )}
-                    <div className="absolute top-3 right-3">
-                      <span
-                        className="badge flex items-center gap-1"
-                        style={{
-                          background: st.bg,
-                          color: st.color,
-                          backdropFilter: "blur(4px)",
-                        }}
-                      >
-                        {st.icon} {st.label}
-                      </span>
                     </div>
-                  </div>
-
-                  {/* Body */}
-                  <div className="p-4 flex flex-col gap-3 flex-1">
-                    <h3 className="font-display font-bold text-sm leading-snug line-clamp-2">
-                      {course.title}
-                    </h3>
-
-                    <div className="flex items-center gap-3 text-xs text-muted">
-                      <span className="flex items-center gap-1">
-                        <MdStar size={13} style={{ color: "#fbbf24" }} />
-                        {course.rating?.toFixed(1)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MdAccessTime size={13} />
-                        {course.totalDuration}m
-                      </span>
-                      <span
-                        className="badge capitalize"
-                        style={{
-                          background: "var(--color-surface2)",
-                          color: "var(--color-muted)",
-                        }}
-                      >
-                        {course.level}
-                      </span>
-                    </div>
-
-                    {/* Progress bar (only for accepted) */}
-                    {enr.status === "accepted" && (
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-muted mb-1.5">
-                          <span>Progress</span>
-                          <span>{enr.progress}%</span>
+                  ))}
+              </div>
+            ) : recentCourses.length === 0 ? (
+              <div className="flex flex-col items-center py-10 text-center flex-1">
+                <div className="text-4xl mb-3">📚</div>
+                <p className="text-sm font-medium mb-1">No courses yet</p>
+                <p className="text-xs text-muted mb-4">
+                  Find something to learn today
+                </p>
+                <Link to="/courses">
+                  <button className="btn-primary text-sm px-4 py-2">
+                    Browse Courses
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-2">
+                {recentCourses.map((enr) => {
+                  const c = enr.courseId;
+                  const st = statusStyle[enr.status];
+                  if (!c) return null;
+                  return (
+                    <div
+                      key={enr._id}
+                      className="flex flex-col gap-3 p-3 rounded-xl border border-border hover:border-primary/30 transition-all cursor-pointer group"
+                      onClick={() =>
+                        enr.status === "accepted" &&
+                        navigate(`/student/courses/${enr._id}`)
+                      }
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-surface2">
+                          {c.thumbnail ? (
+                            <img
+                              src={c.thumbnail}
+                              alt={c.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl">
+                              📚
+                            </div>
+                          )}
                         </div>
-                        <div
-                          className="h-1.5 rounded-full"
-                          style={{ background: "var(--color-border)" }}
-                        >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                            {c.title}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted mt-0.5">
+                            <span className="flex items-center gap-1">
+                              <MdStar size={11} style={{ color: "#fbbf24" }} />
+                              {c.rating?.toFixed(1)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MdAccessTime size={11} />
+                              {c.totalDuration}m
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {enr.status === "accepted" ? (
+                        <div>
+                          <div className="flex justify-between text-xs text-muted mb-1">
+                            <span>Progress</span>
+                            <span>{enr.progress}%</span>
+                          </div>
                           <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${enr.progress}%`,
-                              background: "var(--color-accent)",
-                            }}
-                          />
+                            className="h-1.5 rounded-full"
+                            style={{ background: "var(--color-border)" }}
+                          >
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{
+                                width: `${enr.progress}%`,
+                                background:
+                                  enr.progress === 100
+                                    ? "var(--color-accent)"
+                                    : "var(--color-primary)",
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
-
-                    {enr.status === "pending" && (
-                      <p className="text-xs text-muted italic">
-                        Waiting for instructor approval...
-                      </p>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex gap-2 mt-auto pt-3 border-t border-border">
-                      {enr.status === "accepted" && (
-                        <button
-                          onClick={() =>
-                            navigate(`/student/courses/${enr._id}`)
-                          }
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold text-white transition-all"
-                          style={{ background: "var(--color-primary)" }}
+                      ) : (
+                        <span
+                          className="badge flex items-center gap-1 w-fit"
+                          style={{ background: st.bg, color: st.color }}
                         >
-                          <MdPlayCircle size={14} />
-                          {enr.progress > 0 ? "Continue" : "Start Learning"}
-                        </button>
+                          {st.icon}
+                          {st.label}
+                        </span>
                       )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Pending enrollments */}
+          {pending.length > 0 && (
+            <div className="card flex flex-col gap-4 lg:col-span-3">
+              <h2 className="font-display font-bold text-lg flex items-center gap-2">
+                Pending Approvals
+                <span
+                  className="badge"
+                  style={{
+                    background: "rgba(251,191,36,0.15)",
+                    color: "#fbbf24",
+                  }}
+                >
+                  {pending.length}
+                </span>
+              </h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {pending.map((enr) => {
+                  const c = enr.courseId;
+                  if (!c) return null;
+                  return (
+                    <div
+                      key={enr._id}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border"
+                    >
+                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-surface2">
+                        {c.thumbnail ? (
+                          <img
+                            src={c.thumbnail}
+                            alt={c.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            📚
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {c.title}
+                        </p>
+                        <p className="text-xs text-muted italic">
+                          Waiting for approval...
+                        </p>
+                      </div>
                       <button
                         onClick={() => handleUnenroll(enr._id)}
-                        className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium border border-border text-muted hover:text-danger hover:border-danger/40 transition-all"
+                        className="p-1.5 rounded-lg text-muted hover:text-danger transition-colors shrink-0"
                       >
-                        <MdCancel size={14} />
+                        <MdCancel size={16} />
                       </button>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
