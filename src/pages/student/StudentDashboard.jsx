@@ -135,7 +135,7 @@ export default function StudentDashboard() {
         {/* Header */}
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-4xl font-display font-bold mb-1">
+            <h1 className="text-2xl sm:text-4xl font-display font-bold mb-1">
               Welcome back, {user.email?.split("@")[0]} 👋
             </h1>
             <p className="text-muted">Keep learning — you're doing great!</p>
@@ -148,7 +148,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             {
               label: "Enrolled",
@@ -193,7 +193,7 @@ export default function StudentDashboard() {
                 </div>
               </div>
               <span
-                className="text-4xl font-display font-bold"
+                className="text-3xl sm:text-4xl font-display font-bold"
                 style={{ color }}
               >
                 {value}
@@ -203,7 +203,7 @@ export default function StudentDashboard() {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Overall Progress */}
           <div className="card flex flex-col gap-4">
             <h2 className="font-display font-bold text-lg">Overall Progress</h2>
@@ -249,7 +249,7 @@ export default function StudentDashboard() {
               {inProgress.slice(0, 3).map((enr) => (
                 <div key={enr._id}>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="truncate text-muted max-w-[160px]">
+                    <span className="truncate text-muted max-w-[120px] sm:max-w-[160px]">
                       {enr.courseId?.title}
                     </span>
                     <span className="shrink-0 ml-2">{enr.progress}%</span>
@@ -286,7 +286,7 @@ export default function StudentDashboard() {
             </div>
 
             {loading ? (
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Array(4)
                   .fill(0)
                   .map((_, i) => (
@@ -316,7 +316,7 @@ export default function StudentDashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="grid sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {recentCourses.map((enr) => {
                   const c = enr.courseId;
                   const st = statusStyle[enr.status];
@@ -414,7 +414,7 @@ export default function StudentDashboard() {
                   {pending.length}
                 </span>
               </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {pending.map((enr) => {
                   const c = enr.courseId;
                   if (!c) return null;

@@ -100,7 +100,7 @@ export default function InstructorStudents() {
 
   return (
     <DashboardLayout navItems={instructorNavItems} role="instructor">
-      <div className="fade-up flex flex-col gap-8 max-w-5xl">
+      <div className="fade-up flex flex-col gap-8 w-full mx-auto">
         {/* Header */}
         <div>
           <h1 className="text-4xl font-display font-bold mb-1">Students</h1>

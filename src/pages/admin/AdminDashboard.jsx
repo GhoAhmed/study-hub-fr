@@ -48,7 +48,10 @@ const StatCard = ({ label, value, color, icon, sub }) => (
         {icon}
       </div>
     </div>
-    <span className="text-4xl font-display font-bold" style={{ color }}>
+    <span
+      className="text-3xl sm:text-4xl font-display font-bold"
+      style={{ color }}
+    >
       {value ?? "—"}
     </span>
     {sub && <span className="text-xs text-muted">{sub}</span>}
@@ -121,7 +124,7 @@ export default function AdminDashboard() {
       <div className="fade-up flex flex-col gap-8 overflow-hidden">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-display font-bold mb-1">
+          <h1 className="text-2xl sm:text-4xl font-display font-bold mb-1">
             Platform Overview
           </h1>
           <p className="text-muted">
@@ -130,13 +133,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {statCards.map((s) => (
             <StatCard key={s.label} {...s} />
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Users */}
           <div className="card flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -268,7 +271,7 @@ export default function AdminDashboard() {
                 View all <MdArrowForward size={14} />
               </button>
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {courses.length === 0 ? (
                 <p className="text-sm text-muted py-4">No courses yet</p>
               ) : (

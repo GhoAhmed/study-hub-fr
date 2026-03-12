@@ -55,7 +55,10 @@ const StatCard = ({ label, value, color, icon, sub }) => (
         {icon}
       </div>
     </div>
-    <span className="text-4xl font-display font-bold" style={{ color }}>
+    <span
+      className="text-3xl sm:text-4xl font-display font-bold"
+      style={{ color }}
+    >
       {value ?? "—"}
     </span>
     {sub && <span className="text-xs text-muted">{sub}</span>}
@@ -131,7 +134,7 @@ export default function InstructorDashboard() {
         {/* Header */}
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-4xl font-display font-bold mb-1">
+            <h1 className="text-2xl sm:text-4xl font-display font-bold mb-1">
               Welcome back, {user.email?.split("@")[0]} 👋
             </h1>
             <p className="text-muted">
@@ -147,7 +150,7 @@ export default function InstructorDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
             {
               label: "Total Courses",
@@ -189,7 +192,7 @@ export default function InstructorDashboard() {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Top Courses */}
           <div className="card flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -379,7 +382,7 @@ export default function InstructorDashboard() {
                 No enrolled students yet
               </p>
             ) : (
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {recentStudents.map((enr) => (
                   <div
                     key={enr._id}

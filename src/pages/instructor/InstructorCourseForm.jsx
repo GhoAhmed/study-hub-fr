@@ -160,7 +160,7 @@ export default function InstructorCourseForm() {
 
   return (
     <DashboardLayout navItems={instructorNavItems} role="instructor">
-      <div className="fade-up max-w-3xl">
+      <div className="fade-up w-full mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <button
