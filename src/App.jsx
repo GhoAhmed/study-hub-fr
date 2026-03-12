@@ -13,6 +13,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminInstructors from "./pages/admin/AdminInstructors";
 import InstructorCourseDetail from "./pages/instructor/InstructorCourseDetail";
 import StudentCourseView from "./pages/student/StudentCourseView";
+import StudentCourses from "./pages/student/StudentCourses";
+import InstructorStudents from "./pages/instructor/InstructorStudents";
 
 const PrivateRoute = ({ children, role }) => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -93,6 +95,9 @@ export default function App() {
           </PrivateRoute>
         }
       />
+
+      <Route path="/student/courses" element={<StudentCourses />} />
+      <Route path="/instructor/students" element={<InstructorStudents />} />
 
       <Route
         path="/admin"

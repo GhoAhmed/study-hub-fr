@@ -12,6 +12,7 @@ import {
   MdExpandMore,
   MdExpandLess,
   MdLock,
+  MdMenuBook,
 } from "react-icons/md";
 
 const api = (token) =>
@@ -19,6 +20,168 @@ const api = (token) =>
     baseURL: "http://localhost:3000/api",
     headers: { Authorization: `Bearer ${token}` },
   });
+
+function BlockRenderer({ blocks = [] }) {
+  if (!blocks.length) return null;
+
+  return (
+    <div className="flex flex-col gap-4 mt-8">
+      <h3 className="font-display font-bold text-base flex items-center gap-2 pb-3 border-b border-border">
+        <MdMenuBook size={18} style={{ color: "var(--color-primary)" }} />
+        Lesson Content
+      </h3>
+
+      {blocks.map((block, i) => {
+        switch (block.type) {
+          case "heading": {
+            const level = block.data.level || 2;
+            const Tag = `h${level}`;
+            const sizes = { 1: "text-2xl", 2: "text-xl", 3: "text-lg" };
+            return (
+              <Tag
+                key={i}
+                className={`font-display font-bold ${sizes[level] || "text-xl"}`}
+              >
+                {block.data.text}
+              </Tag>
+            );
+          }
+
+          case "paragraph":
+            return (
+              <p
+                key={i}
+                className="text-sm leading-relaxed"
+                style={{ color: "var(--color-muted)" }}
+              >
+                {block.data.text}
+              </p>
+            );
+
+          case "code":
+            return (
+              <div
+                key={i}
+                className="rounded-xl overflow-hidden border"
+                style={{ borderColor: "var(--color-border)" }}
+              >
+                <div
+                  className="flex items-center justify-between px-4 py-2"
+                  style={{ background: "var(--color-bg)" }}
+                >
+                  <div className="flex gap-1.5">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ background: "var(--color-danger)" }}
+                    />
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ background: "#fbbf24" }}
+                    />
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ background: "var(--color-accent)" }}
+                    />
+                  </div>
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    {block.data.language}
+                  </span>
+                  <button
+                    onClick={() =>
+                      navigator.clipboard
+                        .writeText(block.data.text)
+                        .then(() => toast.success("Copied!"))
+                    }
+                    className="text-xs transition-colors"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <pre
+                  className="p-4 text-sm font-mono overflow-x-auto leading-relaxed"
+                  style={{
+                    background: "rgba(0,0,0,0.3)",
+                    color: "var(--color-accent)",
+                  }}
+                >
+                  <code>{block.data.text}</code>
+                </pre>
+              </div>
+            );
+
+          case "callout": {
+            const calloutStyles = {
+              info: {
+                bg: "rgba(108,71,255,0.08)",
+                border: "rgba(108,71,255,0.25)",
+                emoji: "💡",
+              },
+              warning: {
+                bg: "rgba(251,191,36,0.08)",
+                border: "rgba(251,191,36,0.25)",
+                emoji: "⚠️",
+              },
+              success: {
+                bg: "rgba(0,229,176,0.08)",
+                border: "rgba(0,229,176,0.25)",
+                emoji: "✅",
+              },
+              error: {
+                bg: "rgba(255,107,107,0.08)",
+                border: "rgba(255,107,107,0.25)",
+                emoji: "🚨",
+              },
+            };
+            const cs = calloutStyles[block.data.style] || calloutStyles.info;
+            return (
+              <div
+                key={i}
+                className="flex gap-3 p-4 rounded-xl"
+                style={{ background: cs.bg, border: `1px solid ${cs.border}` }}
+              >
+                <span className="text-lg shrink-0">{cs.emoji}</span>
+                <p className="text-sm leading-relaxed">{block.data.text}</p>
+              </div>
+            );
+          }
+
+          case "bulletList":
+            return (
+              <ul key={i} className="flex flex-col gap-2">
+                {(block.data.items || []).map((item, j) => (
+                  <li
+                    key={j}
+                    className="flex items-start gap-3 text-sm"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full shrink-0 mt-0.5 flex items-center justify-center"
+                      style={{ background: "var(--color-primary)" }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            );
+
+          case "divider":
+            return (
+              <hr key={i} style={{ borderColor: "var(--color-border)" }} />
+            );
+
+          default:
+            return null;
+        }
+      })}
+    </div>
+  );
+}
 
 export default function StudentCourseView() {
   const { id } = useParams(); // enrollment id
@@ -30,7 +193,14 @@ export default function StudentCourseView() {
   const [lessons, setLessons] = useState({});
   const [activeLesson, setActiveLesson] = useState(null);
   const [expanded, setExpanded] = useState({});
-  const [completedLessons, setCompletedLessons] = useState(new Set());
+  const [completedLessons, setCompletedLessons] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`completed_lessons_${id}`);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,6 +254,11 @@ export default function StudentCourseView() {
     const newCompleted = new Set(completedLessons);
     newCompleted.add(lessonId);
     setCompletedLessons(newCompleted);
+
+    localStorage.setItem(
+      `completed_lessons_${id}`,
+      JSON.stringify([...newCompleted]),
+    );
 
     const progress = Math.round((newCompleted.size / totalLessons) * 100);
     try {
@@ -297,6 +472,8 @@ export default function StudentCourseView() {
                   </a>
                 )}
               </div>
+
+              <BlockRenderer blocks={activeLesson?.content || []} />
 
               {/* Next lesson */}
               {(() => {

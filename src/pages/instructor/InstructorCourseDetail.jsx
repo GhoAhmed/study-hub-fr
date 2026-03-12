@@ -19,6 +19,7 @@ import {
   MdPictureAsPdf,
   MdDragIndicator,
 } from "react-icons/md";
+import BlockEditor from "../../components/BlockEditor";
 
 const api = (token) =>
   axios.create({
@@ -27,7 +28,13 @@ const api = (token) =>
   });
 
 const EMPTY_SECTION = { title: "", order: 0 };
-const EMPTY_LESSON = { title: "", videoUrl: "", pdfUrl: "", duration: "" };
+const EMPTY_LESSON = {
+  title: "",
+  videoUrl: "",
+  pdfUrl: "",
+  duration: "",
+  content: [],
+};
 
 export default function InstructorCourseDetail() {
   const { id: courseId } = useParams();
@@ -218,6 +225,7 @@ export default function InstructorCourseDetail() {
       videoUrl: lesson.videoUrl || "",
       pdfUrl: lesson.pdfUrl || "",
       duration: lesson.duration || "",
+      content: lesson.content || [], // ← add this
     });
     setLessonModal(true);
   };
@@ -939,40 +947,69 @@ export default function InstructorCourseDetail() {
           LESSON MODAL
       ══════════════════════════════════════════ */}
       {lessonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="card w-full max-w-md fade-up">
-            <h2 className="text-lg font-display font-bold mb-5">
-              {editingLesson ? "Edit Lesson" : "New Lesson"}
-            </h2>
-            <form onSubmit={handleLessonSubmit} className="flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 flex bg-bg overflow-hidden">
+          {/* Left panel — lesson settings */}
+          <div
+            className="w-80 shrink-0 flex flex-col border-r border-border overflow-y-auto"
+            style={{ background: "var(--color-surface)" }}
+          >
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+              <button
+                onClick={() => {
+                  setLessonModal(false);
+                  setEditingLesson(null);
+                }}
+                className="p-2 rounded-lg bg-surface2 text-muted hover:text-text transition-colors"
+              >
+                <MdArrowBack size={18} />
+              </button>
+              <div>
+                <p className="font-display font-bold text-sm">
+                  {editingLesson ? "Edit Lesson" : "New Lesson"}
+                </p>
+                <p className="text-xs text-muted">
+                  Fill details then build content →
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-5 p-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-muted">Title *</label>
+                <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                  Title *
+                </label>
                 <input
-                  className="input"
+                  className="input text-sm"
                   value={lessonForm.title}
                   required
-                  placeholder="e.g. Setting up the environment"
+                  placeholder="e.g. Introduction to Hooks"
                   onChange={(e) =>
                     setLessonForm({ ...lessonForm, title: e.target.value })
                   }
                 />
               </div>
+
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-muted">Video URL</label>
+                <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                  Video URL
+                </label>
                 <input
-                  className="input"
+                  className="input text-sm"
                   value={lessonForm.videoUrl}
                   placeholder="https://youtube.com/watch?v=..."
                   onChange={(e) =>
                     setLessonForm({ ...lessonForm, videoUrl: e.target.value })
                   }
                 />
-                <p className="text-xs text-muted">Supports YouTube links</p>
+                <p className="text-xs text-muted">YouTube links supported</p>
               </div>
+
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-muted">PDF Resource URL</label>
+                <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                  PDF Resource
+                </label>
                 <input
-                  className="input"
+                  className="input text-sm"
                   value={lessonForm.pdfUrl}
                   placeholder="https://..."
                   onChange={(e) =>
@@ -980,10 +1017,13 @@ export default function InstructorCourseDetail() {
                   }
                 />
               </div>
+
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-muted">Duration (minutes)</label>
+                <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                  Duration (min)
+                </label>
                 <input
-                  className="input"
+                  className="input text-sm"
                   type="number"
                   min="0"
                   value={lessonForm.duration}
@@ -993,30 +1033,94 @@ export default function InstructorCourseDetail() {
                   }
                 />
               </div>
-              <div className="flex gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLessonModal(false);
-                    setEditingLesson(null);
-                  }}
-                  className="btn-ghost flex-1"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={lessonLoading}
-                  className="btn-primary flex-1"
-                >
-                  {lessonLoading
-                    ? "Saving..."
-                    : editingLesson
-                      ? "Save Changes"
-                      : "Create Lesson"}
-                </button>
+
+              {/* Content summary */}
+              <div
+                className="rounded-xl p-4 flex flex-col gap-1"
+                style={{ background: "var(--color-surface2)" }}
+              >
+                <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1">
+                  Content Blocks
+                </p>
+                <p className="text-2xl font-display font-bold">
+                  {lessonForm.content.length}
+                </p>
+                <p className="text-xs text-muted">
+                  {lessonForm.content.length === 0
+                    ? "No blocks yet — add them on the right"
+                    : lessonForm.content.map((b) => b.type).join(", ")}
+                </p>
               </div>
-            </form>
+            </div>
+
+            <div className="mt-auto p-5 border-t border-border">
+              <button
+                onClick={handleLessonSubmit}
+                disabled={lessonLoading || !lessonForm.title}
+                className="btn-primary w-full py-3 flex items-center justify-center gap-2"
+              >
+                {lessonLoading
+                  ? "Saving..."
+                  : editingLesson
+                    ? "Save Changes"
+                    : "Create Lesson"}
+              </button>
+            </div>
+          </div>
+
+          {/* Right panel — block editor */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div
+              className="flex items-center justify-between px-8 py-4 border-b border-border shrink-0"
+              style={{ background: "var(--color-surface)" }}
+            >
+              <div>
+                <h2 className="font-display font-bold">
+                  {lessonForm.title || "Untitled Lesson"}
+                </h2>
+                <p className="text-xs text-muted">
+                  Build lesson content with blocks — students will see this
+                  below the video
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {[
+                  "heading",
+                  "paragraph",
+                  "code",
+                  "callout",
+                  "bulletList",
+                  "divider",
+                ]
+                  .map((type) => (
+                    <span
+                      key={type}
+                      className="badge text-xs"
+                      style={{
+                        background: "var(--color-surface2)",
+                        color: "var(--color-muted)",
+                      }}
+                    >
+                      {lessonForm.content.filter((b) => b.type === type)
+                        .length > 0
+                        ? `${lessonForm.content.filter((b) => b.type === type).length} ${type}`
+                        : null}
+                    </span>
+                  ))
+                  .filter(Boolean)}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-8 py-6">
+              <div className="max-w-2xl mx-auto">
+                <BlockEditor
+                  blocks={lessonForm.content}
+                  onChange={(content) =>
+                    setLessonForm({ ...lessonForm, content })
+                  }
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
