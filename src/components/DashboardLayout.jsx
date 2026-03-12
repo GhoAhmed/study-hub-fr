@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LuLogOut } from "react-icons/lu";
+import { MdHome, MdLogout, MdDashboard } from "react-icons/md";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -18,6 +19,8 @@ export default function DashboardLayout({ children, navItems, role }) {
   const isMobileScreen = () => window.innerWidth < 768;
   const [collapsed, setCollapsed] = useState(isMobileScreen());
   const [isMobile, setIsMobile] = useState(isMobileScreen());
+  const [dropdown, setDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -32,7 +35,17 @@ export default function DashboardLayout({ children, navItems, role }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isMobile) setCollapsed(true);
-  }, [location.pathname]);
+  }, [isMobile, location.pathname]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+        setDropdown(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const logout = () => {
     localStorage.clear();
@@ -43,7 +56,6 @@ export default function DashboardLayout({ children, navItems, role }) {
   const sidebarOpen = !collapsed;
 
   return (
-    // ✅ h-screen + overflow-hidden on root to prevent page scroll bleeding
     <div className="flex h-screen overflow-hidden bg-bg relative">
       {/* Backdrop — mobile only */}
       {isMobile && sidebarOpen && (
@@ -58,8 +70,6 @@ export default function DashboardLayout({ children, navItems, role }) {
         className="flex flex-col border-r border-border bg-surface shrink-0 z-30 transition-all duration-300"
         style={{
           width: sidebarOpen ? "240px" : "72px",
-          // ✅ desktop: relative in normal flow, full height via flex parent
-          // ✅ mobile: fixed overlay, full viewport height
           position: isMobile ? "fixed" : "relative",
           top: isMobile ? 0 : "auto",
           left: isMobile ? (sidebarOpen ? 0 : "-72px") : "auto",
@@ -83,7 +93,7 @@ export default function DashboardLayout({ children, navItems, role }) {
           )}
         </div>
 
-        {/* Nav — scrollable if items overflow */}
+        {/* Nav */}
         <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
           {navItems.map(({ icon, label, path }) => {
             const active = location.pathname === path;
@@ -109,7 +119,7 @@ export default function DashboardLayout({ children, navItems, role }) {
           })}
         </nav>
 
-        {/* User + Logout — always pinned to bottom */}
+        {/* User + Logout */}
         <div className="px-3 py-4 border-t border-border flex flex-col gap-1 shrink-0">
           {sidebarOpen && (
             <div className="flex items-center gap-3 px-3 py-2 mb-1">
@@ -147,19 +157,114 @@ export default function DashboardLayout({ children, navItems, role }) {
           >
             {sidebarOpen ? "←" : "☰"}
           </button>
-          <span
-            className="badge"
-            style={{
-              background: `rgba(${rgb},0.12)`,
-              color,
-              border: `1px solid rgba(${rgb},0.25)`,
-            }}
-          >
-            {role}
-          </span>
+
+          {/* ── User dropdown ── */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdown(!dropdown)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all hover:bg-surface2"
+              style={{ border: "1px solid var(--color-border)" }}
+            >
+              {/* Avatar */}
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                style={{ background: color }}
+              >
+                {user.email?.[0]?.toUpperCase()}
+              </div>
+              <div className="text-left hidden sm:block">
+                <p className="text-xs font-medium leading-none">
+                  {user.email?.split("@")[0]}
+                </p>
+                <p className="text-xs capitalize mt-0.5" style={{ color }}>
+                  {role}
+                </p>
+              </div>
+              {/* Chevron */}
+              <svg
+                className="w-3 h-3 text-muted transition-transform"
+                style={{
+                  transform: dropdown ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {/* Dropdown menu */}
+            {dropdown && (
+              <div
+                className="absolute right-0 top-full mt-2 w-52 rounded-2xl shadow-2xl overflow-hidden z-50 fade-up"
+                style={{
+                  background: "var(--color-surface)",
+                  border: "1px solid var(--color-border)",
+                }}
+              >
+                {/* User info header */}
+                <div className="px-4 py-3 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                      style={{ background: color }}
+                    >
+                      {user.email?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {user.email?.split("@")[0]}
+                      </p>
+                      <p
+                        className="text-xs truncate"
+                        style={{ color: "var(--color-muted)" }}
+                      >
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Menu items */}
+                <div className="p-1.5 flex flex-col gap-0.5">
+                  <button
+                    onClick={() => {
+                      navigate("/");
+                      setDropdown(false);
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-surface2 transition-colors w-full text-left"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    <MdHome size={17} style={{ color }} />
+                    Home
+                  </button>
+
+                  <div
+                    className="h-px my-1"
+                    style={{ background: "var(--color-border)" }}
+                  />
+
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-surface2 transition-colors w-full text-left"
+                    style={{ color: "var(--color-danger)" }}
+                  >
+                    <MdLogout size={17} />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </header>
 
-        {/* ✅ Only the content area scrolls */}
+        {/* Content */}
         <main className="flex-1 p-8 overflow-y-auto">{children}</main>
       </div>
     </div>
