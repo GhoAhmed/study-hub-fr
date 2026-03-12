@@ -12,7 +12,9 @@ import {
   MdLanguage,
   MdBarChart,
   MdMenuBook,
+  MdPending,
 } from "react-icons/md";
+import { toast } from "react-hot-toast";
 
 const levelColors = {
   beginner: { bg: "rgba(0,229,176,0.12)", color: "var(--color-accent)" },
@@ -26,6 +28,44 @@ export default function CourseDetail() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem("user") || "null");
+  const [enrollStatus, setEnrollStatus] = useState(null); // null | "pending" | "accepted"
+  const [enrolling, setEnrolling] = useState(false);
+
+  useEffect(() => {
+    if (!user || !course) return;
+    axios
+      .get("http://localhost:3000/api/enrollments/me", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+      .then((r) => {
+        const enr = r.data.find(
+          (e) => e.courseId?._id === course._id || e.courseId === course._id,
+        );
+        if (enr) setEnrollStatus(enr.status);
+      })
+      .catch(() => {});
+  }, [course]);
+
+  const handleEnroll = async () => {
+    setEnrolling(true);
+    try {
+      await axios.post(
+        "http://localhost:3000/api/enrollments",
+        { courseId: course._id },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
+      toast.success(
+        "Enrollment request sent! Waiting for instructor approval.",
+      );
+      setEnrollStatus("pending");
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to enroll");
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   useEffect(() => {
     axios
@@ -159,16 +199,56 @@ export default function CourseDetail() {
                 )}
               </div>
 
-              {user ? (
-                <button className="btn-primary w-full py-3.5 text-base glow-primary flex items-center justify-center gap-2">
-                  <MdPlayCircle size={20} /> Enroll Now
-                </button>
-              ) : (
+              {!user ? (
                 <Link to="/register">
                   <button className="btn-primary w-full py-3.5 text-base glow-primary">
                     Sign Up to Enroll
                   </button>
                 </Link>
+              ) : user.role === "student" ? (
+                enrollStatus === "accepted" ? (
+                  <button
+                    className="btn-primary w-full py-3.5 text-base flex items-center justify-center gap-2"
+                    style={{ background: "var(--color-accent)" }}
+                    onClick={() => navigate("/student")}
+                  >
+                    <MdPlayCircle size={20} /> Go to Course
+                  </button>
+                ) : enrollStatus === "pending" ? (
+                  <div
+                    className="w-full py-3.5 text-base text-center rounded-xl font-medium"
+                    style={{
+                      background: "rgba(251,191,36,0.12)",
+                      color: "#fbbf24",
+                      border: "1px solid rgba(251,191,36,0.3)",
+                    }}
+                  >
+                    <MdPending /> Pending Approval
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleEnroll}
+                    disabled={enrolling}
+                    className="btn-primary w-full py-3.5 text-base glow-primary flex items-center justify-center gap-2"
+                  >
+                    <MdPlayCircle size={20} />
+                    {enrolling ? "Sending request..." : "Enroll Now"}
+                  </button>
+                )
+              ) : (
+                // instructor or admin — show course owner info instead
+                <div
+                  className="w-full py-3.5 text-sm text-center rounded-xl"
+                  style={{
+                    background: "var(--color-surface2)",
+                    color: "var(--color-muted)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                >
+                  {user.role === "instructor"
+                    ? "👨‍🏫 Welcome instructor"
+                    : "🛡️ Admin view"}
+                </div>
               )}
 
               <div className="flex flex-col gap-2 text-sm text-muted">

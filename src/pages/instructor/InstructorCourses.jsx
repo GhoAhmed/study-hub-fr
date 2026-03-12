@@ -12,6 +12,7 @@ import {
   MdVisibilityOff,
   MdStar,
   MdPeople,
+  MdMenuBook,
 } from "react-icons/md";
 import toast from "react-hot-toast";
 
@@ -246,6 +247,15 @@ export default function InstructorCourses() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 mt-auto pt-3 border-t border-border">
+                      <button
+                        onClick={() =>
+                          navigate(`/instructor/courses/${course._id}/content`)
+                        }
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all bg-surface2 hover:bg-accent/20 text-muted"
+                        style={{ color: "var(--color-accent)" }}
+                      >
+                        <MdMenuBook size={14} /> Content
+                      </button>
                       <button
                         onClick={() =>
                           navigate(`/instructor/courses/edit/${course._id}`)

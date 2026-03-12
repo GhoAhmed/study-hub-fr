@@ -11,6 +11,8 @@ import StudentDashboard from "./pages/student/StudentDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminInstructors from "./pages/admin/AdminInstructors";
+import InstructorCourseDetail from "./pages/instructor/InstructorCourseDetail";
+import StudentCourseView from "./pages/student/StudentCourseView";
 
 const PrivateRoute = ({ children, role }) => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -67,6 +69,31 @@ export default function App() {
       />
       <Route path="/courses" element={<Courses />} />
       <Route path="/courses/:id" element={<CourseDetail />} />
+
+      <Route
+        path="/instructor/courses/:id/content"
+        element={
+          <PrivateRoute role="instructor">
+            <InstructorCourseDetail />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/student"
+        element={
+          <PrivateRoute role="student">
+            <StudentDashboard />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/student/courses/:id"
+        element={
+          <PrivateRoute role="student">
+            <StudentCourseView />
+          </PrivateRoute>
+        }
+      />
 
       <Route
         path="/admin"
